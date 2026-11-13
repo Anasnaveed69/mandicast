@@ -1,0 +1,56 @@
+[
+  {
+    "registered_model": "mandicast-onion-h1",
+    "version": "1",
+    "alias": "champion",
+    "model": "naive",
+    "family": "baseline",
+    "cv_mase": 2.3102,
+    "naive_mase": 2.3102
+  },
+  {
+    "registered_model": "mandicast-onion-h7",
+    "version": "1",
+    "alias": "champion",
+    "model": "chronos_zeroshot",
+    "family": "transformer_pretrained",
+    "cv_mase": 1.6998,
+    "naive_mase": 1.7197
+  },
+  {
+    "registered_model": "mandicast-potato-h1",
+    "version": "1",
+    "alias": "champion",
+    "model": "naive",
+    "family": "baseline",
+    "cv_mase": 0.9422,
+    "naive_mase": 0.9422
+  },
+  {
+    "registered_model": "mandicast-potato-h7",
+    "version": "1",
+    "alias": "champion",
+    "model": "naive",
+    "family": "baseline",
+    "cv_mase": 0.8406,
+    "naive_mase": 0.8406
+  },
+  {
+    "registered_model": "mandicast-tomato-h1",
+    "version": "1",
+    "alias": "champion",
+    "model": "naive",
+    "family": "baseline",
+    "cv_mase": 2.9793,
+    "naive_mase": 2.9793
+  },
+  {
+    "registered_model": "mandicast-tomato-h7",
+    "version": "1",
+    "alias": "champion",
+    "model": "naive",
+    "family": "baseline",
+    "cv_mase": 2.405,
+    "naive_mase": 2.405
+  }
+]

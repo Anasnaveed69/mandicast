@@ -1,0 +1,267 @@
+schema: '2.0'
+stages:
+  prepare:
+    cmd: python -m mandicast.prepare
+    deps:
+    - path: data/raw/amis_lahore.csv
+      hash: md5
+      md5: 58e82be7800ad76ee8ee921b148a7b54
+      size: 3391225
+    - path: mandicast/prepare.py
+      hash: md5
+      md5: 0530b5b11aaa636a904c861b02c4a0df
+      size: 7448
+    params:
+      params.yaml:
+        data:
+          raw_path: data/raw/amis_lahore.csv
+          city: Lahore
+          commodities:
+            tomato:
+            - ^tomato$
+            onion:
+            - ^onion$
+            potato:
+            - ^potato\s*fresh
+            - ^potato\s*sugar\s*free
+            - ^potato\s*\(?\s*store
+        prepare:
+          start_date: '2018-01-01'
+          max_gap_days: 7
+          spike_sigmas: 6.0
+          spike_min_jump: 0.4
+    outs:
+    - path: data/processed/prices.parquet
+      hash: md5
+      md5: d480c9bb5a220ebc2965a6415cf21db6
+      size: 11761
+    - path: reports/data_quality.json
+      hash: md5
+      md5: 6d7d387decc1f2d48380b91e80efaa40
+      size: 598
+  features:
+    cmd: python -m mandicast.features
+    deps:
+    - path: data/processed/prices.parquet
+      hash: md5
+      md5: d480c9bb5a220ebc2965a6415cf21db6
+      size: 11761
+    - path: mandicast/features.py
+      hash: md5
+      md5: 4173b9dabb4c0ceade4aff5d098b10dc
+      size: 3836
+    params:
+      params.yaml:
+        features:
+          lags:
+          - 1
+          - 2
+          - 3
+          - 7
+          - 14
+          - 28
+          rolling_windows:
+          - 7
+          - 14
+          - 28
+          long_window: 365
+    outs:
+    - path: data/processed/features.parquet
+      hash: md5
+      md5: 96ac5462075d40080fdb5aec26d3cae5
+      size: 185398
+  tune:
+    cmd: python -m mandicast.tune
+    deps:
+    - path: data/processed/features.parquet
+      hash: md5
+      md5: 96ac5462075d40080fdb5aec26d3cae5
+      size: 185398
+    - path: mandicast/backtest.py
+      hash: md5
+      md5: d34cd601ff2a373007d113f5b33f2e4a
+      size: 2346
+    - path: mandicast/evaluation.py
+      hash: md5
+      md5: a8a56c798f4a0564fd1f2d80161da5eb
+      size: 3106
+    - path: mandicast/models/tabular.py
+      hash: md5
+      md5: a27efff22c69d9c22377b6a164cebafc
+      size: 4129
+    - path: mandicast/tune.py
+      hash: md5
+      md5: b30b66cbb521c605f85f4657207e6be1
+      size: 3520
+    params:
+      params.yaml:
+        backtest:
+          horizons:
+          - 1
+          - 7
+          n_folds: 5
+          test_size: 30
+          min_train_days: 365
+        models.xgboost:
+          enabled: true
+          use_tuned: true
+          n_estimators: 400
+          max_depth: 4
+          learning_rate: 0.05
+          subsample: 0.8
+          colsample_bytree: 0.8
+          min_child_weight: 5
+        seed: 42
+        tune:
+          n_trials: 25
+          inner_folds: 3
+    outs:
+    - path: models/xgb_params.json
+      hash: md5
+      md5: 654d19dc32896f658baab33880563721
+      size: 229
+  benchmark:
+    cmd: python -m mandicast.benchmark
+    deps:
+    - path: data/processed/features.parquet
+      hash: md5
+      md5: 96ac5462075d40080fdb5aec26d3cae5
+      size: 185398
+    - path: data/processed/prices.parquet
+      hash: md5
+      md5: d480c9bb5a220ebc2965a6415cf21db6
+      size: 11761
+    - path: mandicast/backtest.py
+      hash: md5
+      md5: d34cd601ff2a373007d113f5b33f2e4a
+      size: 2346
+    - path: mandicast/benchmark.py
+      hash: md5
+      md5: 40ccedd8df96af2074450579115c7039
+      size: 7036
+    - path: mandicast/evaluation.py
+      hash: md5
+      md5: a8a56c798f4a0564fd1f2d80161da5eb
+      size: 3106
+    - path: mandicast/models
+      hash: md5
+      md5: 48be9a95bda67d911ba6782735685892.dir
+      size: 59447
+      nfiles: 16
+    - path: models/xgb_params.json
+      hash: md5
+      md5: 654d19dc32896f658baab33880563721
+      size: 229
+    params:
+      params.yaml:
+        backtest:
+          horizons:
+          - 1
+          - 7
+          n_folds: 5
+          test_size: 30
+          min_train_days: 365
+        models:
+          naive:
+            enabled: true
+          seasonal_naive:
+            enabled: true
+            season: 364
+          linear:
+            enabled: true
+            alpha: 1.0
+          xgboost:
+            enabled: true
+            use_tuned: true
+            n_estimators: 400
+            max_depth: 4
+            learning_rate: 0.05
+            subsample: 0.8
+            colsample_bytree: 0.8
+            min_child_weight: 5
+          patchtst:
+            enabled: true
+            input_len: 56
+            patch_len: 8
+            stride: 4
+            d_model: 64
+            n_heads: 4
+            n_layers: 2
+            dropout: 0.2
+            lr: 0.001
+            batch_size: 128
+            max_epochs: 40
+            patience: 6
+          chronos:
+            enabled: true
+            model_id: amazon/chronos-bolt-tiny
+            context_length: 512
+        quantiles:
+        - 0.1
+        - 0.5
+        - 0.9
+        seed: 42
+    outs:
+    - path: reports/benchmark.csv
+      hash: md5
+      md5: 4b974294f582388bd44f0d3b63393a57
+      size: 2827
+    - path: reports/benchmark_summary.json
+      hash: md5
+      md5: a3bde070eaf93d892bbf8e90260e8e66
+      size: 586
+    - path: reports/predictions.parquet
+      hash: md5
+      md5: 79e10e812deaf54240c535849911794a
+      size: 84559
+  register:
+    cmd: python -m mandicast.register
+    deps:
+    - path: data/processed/features.parquet
+      hash: md5
+      md5: 96ac5462075d40080fdb5aec26d3cae5
+      size: 185398
+    - path: mandicast/register.py
+      hash: md5
+      md5: c4cc9740bdd81f2259ae90d3da6dfddd
+      size: 5430
+    - path: mandicast/serving.py
+      hash: md5
+      md5: 16683ddfc65465497f1de82a1dedd22e
+      size: 2369
+    - path: reports/benchmark.csv
+      hash: md5
+      md5: 4b974294f582388bd44f0d3b63393a57
+      size: 2827
+    params:
+      params.yaml:
+        backtest.horizons:
+        - 1
+        - 7
+        features:
+          lags:
+          - 1
+          - 2
+          - 3
+          - 7
+          - 14
+          - 28
+          rolling_windows:
+          - 7
+          - 14
+          - 28
+          long_window: 365
+        register:
+          metric: mase
+          model_prefix: mandicast
+          promote_only_if_better: true
+    outs:
+    - path: models/registry
+      hash: md5
+      md5: f3f6e5d2b22dc962697d3e04a4784baf.dir
+      size: 2092
+      nfiles: 8
+    - path: reports/registry.json
+      hash: md5
+      md5: 41f54b4eed9f54b5c61269251da5ab15
+      size: 1260

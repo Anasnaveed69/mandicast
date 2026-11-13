@@ -1,0 +1,31 @@
+{
+  "onion": {
+    "days": 682,
+    "start": "2025-01-01",
+    "end": "2026-11-13",
+    "missing_days": 10,
+    "long_gap_days": 0,
+    "spikes_fixed": 0
+  },
+  "potato": {
+    "days": 682,
+    "start": "2025-01-01",
+    "end": "2026-11-13",
+    "missing_days": 13,
+    "long_gap_days": 0,
+    "spikes_fixed": 0
+  },
+  "tomato": {
+    "days": 682,
+    "start": "2025-01-01",
+    "end": "2026-11-13",
+    "missing_days": 10,
+    "long_gap_days": 0,
+    "spikes_fixed": 0
+  },
+  "common_range": {
+    "start": "2025-01-01",
+    "end": "2026-11-13",
+    "days": 682
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "onion_h1": {
+    "best_model": "naive",
+    "mase": 2.3102,
+    "mape": 3.12
+  },
+  "onion_h7": {
+    "best_model": "chronos_zeroshot",
+    "mase": 1.6998,
+    "mape": 8.68
+  },
+  "potato_h1": {
+    "best_model": "naive",
+    "mase": 0.9422,
+    "mape": 2.52
+  },
+  "potato_h7": {
+    "best_model": "naive",
+    "mase": 0.8406,
+    "mape": 7.1
+  },
+  "tomato_h1": {
+    "best_model": "naive",
+    "mase": 2.9793,
+    "mape": 6.32
+  },
+  "tomato_h7": {
+    "best_model": "naive",
+    "mase": 2.405,
+    "mape": 19.42
+  },
+  "mean_best_mase": 1.8628
+}
