@@ -1,0 +1,81 @@
+stages:
+  prepare:
+    cmd: python -m mandicast.prepare
+    deps:
+      - mandicast/prepare.py
+      - data/raw/amis_lahore.csv
+    params:
+      - data
+      - prepare
+    outs:
+      - data/processed/prices.parquet
+    metrics:
+      - reports/data_quality.json:
+          cache: false
+
+  features:
+    cmd: python -m mandicast.features
+    deps:
+      - mandicast/features.py
+      - data/processed/prices.parquet
+    params:
+      - features
+    outs:
+      - data/processed/features.parquet
+
+  tune:
+    cmd: python -m mandicast.tune
+    deps:
+      - mandicast/tune.py
+      - mandicast/models/tabular.py
+      - mandicast/backtest.py
+      - mandicast/evaluation.py
+      - data/processed/features.parquet
+    params:
+      - backtest
+      - tune
+      - models.xgboost
+      - seed
+    outs:
+      - models/xgb_params.json:
+          cache: false
+
+  benchmark:
+    cmd: python -m mandicast.benchmark
+    deps:
+      - mandicast/benchmark.py
+      - mandicast/backtest.py
+      - mandicast/evaluation.py
+      - mandicast/models
+      - data/processed/prices.parquet
+      - data/processed/features.parquet
+      - models/xgb_params.json
+    params:
+      - backtest
+      - models
+      - quantiles
+      - seed
+    outs:
+      - reports/predictions.parquet
+      - reports/benchmark.csv:
+          cache: false
+    metrics:
+      - reports/benchmark_summary.json:
+          cache: false
+
+  register:
+    cmd: python -m mandicast.register
+    deps:
+      - mandicast/register.py
+      - mandicast/serving.py
+      - reports/benchmark.csv
+      - data/processed/features.parquet
+    params:
+      - register
+      - backtest.horizons
+      - features
+    outs:
+      - models/registry
+    metrics:
+      - reports/registry.json:
+          cache: false
