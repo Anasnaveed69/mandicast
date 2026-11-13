@@ -1,11 +1,27 @@
+# python
 __pycache__/
 *.pyc
+*.egg-info/
 .venv/
 venv/
 .pytest_cache/
 .ruff_cache/
+.coverage
 .ipynb_checkpoints/
+
+# secrets / local config
+.env
+*.local
+
+# editors and OS
+.vscode/
+.idea/
 .DS_Store
+Thumbs.db
+desktop.ini
+
+# logs
+*.log
 
 # mlflow (local tracking server state)
 mlflow.db
@@ -17,3 +33,7 @@ data/raw/html/
 
 # per-window scrape outputs, merged into amis_lahore.csv
 data/raw/part*.csv
+
+# data and model files are tracked by DVC (see the .gitignore files dvc
+# creates next to each output), never commit them directly
+*.parquet
