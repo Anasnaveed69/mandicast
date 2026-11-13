@@ -1,0 +1,5 @@
+outs:
+- md5: 58e82be7800ad76ee8ee921b148a7b54
+  size: 3391225
+  hash: md5
+  path: amis_lahore.csv
