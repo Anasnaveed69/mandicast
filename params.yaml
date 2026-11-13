@@ -1,0 +1,82 @@
+seed: 42
+
+data:
+  raw_path: data/raw/amis_lahore.csv
+  city: Lahore
+  # Patterns are in priority order. Lower ones only fill long stretches where
+  # the first is missing (AMIS lists "Potato Sugar free" instead of "Potato
+  # Fresh" for several months a year).
+  commodities:
+    tomato: ["^tomato$"]
+    onion: ["^onion$"]
+    potato: ["^potato\\s*fresh", "^potato\\s*sugar\\s*free", "^potato\\s*\\(?\\s*store"]
+
+prepare:
+  start_date: "2018-01-01"
+  max_gap_days: 7        # short gaps (mandi closed, Eid holidays) are interpolated
+  spike_sigmas: 6.0      # one-day spikes that revert next day are treated as typos
+  spike_min_jump: 0.4    # ...but only if the jump is at least ~50% (log 0.4)
+
+features:
+  lags: [1, 2, 3, 7, 14, 28]
+  rolling_windows: [7, 14, 28]
+  long_window: 365
+
+backtest:
+  horizons: [1, 7]
+  n_folds: 5
+  test_size: 30          # forecast origins per fold
+  min_train_days: 365
+
+models:
+  naive:
+    enabled: true
+  seasonal_naive:
+    enabled: true
+    season: 364        # same weekday last year (weekly season would just copy naive at h=7)
+  linear:
+    enabled: true
+    alpha: 1.0
+  xgboost:
+    enabled: true
+    use_tuned: true      # read models/xgb_params.json from the tune stage
+    n_estimators: 400
+    max_depth: 4
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    min_child_weight: 5
+  patchtst:
+    enabled: true
+    input_len: 56
+    patch_len: 8
+    stride: 4
+    d_model: 64
+    n_heads: 4
+    n_layers: 2
+    dropout: 0.2
+    lr: 0.001
+    batch_size: 128
+    max_epochs: 40
+    patience: 6
+  chronos:
+    enabled: true
+    model_id: amazon/chronos-bolt-tiny
+    context_length: 512
+
+tune:
+  n_trials: 25
+  inner_folds: 3
+
+quantiles: [0.1, 0.5, 0.9]
+
+mlflow:
+  tracking_uri: sqlite:///mlflow.db
+  benchmark_experiment: mandicast-benchmark
+  tuning_experiment: mandicast-tuning
+  registry_experiment: mandicast-registry
+
+register:
+  metric: mase
+  model_prefix: mandicast
+  promote_only_if_better: true
