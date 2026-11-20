@@ -37,3 +37,7 @@ data/raw/part*.csv
 # data and model files are tracked by DVC (see the .gitignore files dvc
 # creates next to each output), never commit them directly
 *.parquet
+
+# phase 2: demo bundle (python -m mandicast.demo) and exported serving models
+demo/
+models/serving/

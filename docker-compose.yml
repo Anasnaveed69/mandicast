@@ -1,0 +1,154 @@
+# MandiCast production stack.
+#
+#   cp .env.example .env              # then edit
+#   docker compose up -d --build      # postgres, mlflow, api, ui, nginx, scheduler
+#   docker compose --profile train run --rm pipeline   # dvc repro -> MLflow registry -> API reload
+#
+# Without real data / a registry yet:
+#   python -m mandicast.demo --out demo   (or run it inside the api image, see README)
+#   DATA_DIR=./demo/data SERVING_DIR=./demo/models/serving MODEL_SOURCE=local docker compose up -d nginx
+#
+# Images are pulled from GHCR on the server (CD sets REGISTRY / IMAGE_TAG) and
+# built locally otherwise.
+
+name: mandicast
+
+x-pipeline-env: &pipeline-env
+  MLFLOW_TRACKING_URI: http://mlflow:5000
+  API_URL: http://api:8000
+  ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+  REFRESH_AT: ${REFRESH_AT:-18:30}
+  RETRAIN_WEEKDAY: ${RETRAIN_WEEKDAY:-}
+  DVC_REMOTE_URL: ${DVC_REMOTE_URL:-}
+  AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+  AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+  AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-ap-south-1}
+
+x-pipeline-build: &pipeline-build
+  context: .
+  dockerfile: docker/app.Dockerfile
+  target: pipeline
+  args:
+    GIT_COMMIT: ${GIT_COMMIT:-unknown}
+
+services:
+  # ------------------------------------------------------------ data stores
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-mlflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-mlflow}
+      POSTGRES_DB: ${POSTGRES_DB:-mlflow}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mlflow:
+    image: ${REGISTRY:-ghcr.io/anasnaveed69}/mandicast-mlflow:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: docker/mlflow.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      MLFLOW_BACKEND_STORE_URI: postgresql+psycopg2://${POSTGRES_USER:-mlflow}:${POSTGRES_PASSWORD:-mlflow}@postgres:5432/${POSTGRES_DB:-mlflow}
+      MLFLOW_ARTIFACTS_DESTINATION: ${MLFLOW_ARTIFACTS_DESTINATION:-/mlflow/artifacts}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-ap-south-1}
+    volumes:
+      - mlflow-artifacts:/mlflow/artifacts
+    ports:
+      - "127.0.0.1:${MLFLOW_PORT:-5000}:5000"     # private; use an SSH tunnel on the server
+
+  # ------------------------------------------------------------ serving
+  api:
+    image: ${REGISTRY:-ghcr.io/anasnaveed69}/mandicast-api:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: docker/app.Dockerfile
+      target: api
+      args:
+        GIT_COMMIT: ${GIT_COMMIT:-unknown}
+    restart: unless-stopped
+    environment:
+      MODEL_SOURCE: ${MODEL_SOURCE:-mlflow}          # mlflow = registry @champion, local = exported bundle
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MODEL_ALIAS: ${MODEL_ALIAS:-champion}
+      DATA_PATH: /app/data/processed/prices.parquet
+      MODEL_DIR: /app/models/serving
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      API_ROOT_PATH: /api
+    volumes:
+      - ${DATA_DIR:-./data}:/app/data:ro
+      - ${SERVING_DIR:-./models/serving}:/app/models/serving:ro
+    ports:
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    deploy:
+      resources:
+        limits:
+          memory: ${API_MEMORY_LIMIT:-1500m}
+
+  ui:
+    image: ${REGISTRY:-ghcr.io/anasnaveed69}/mandicast-ui:${IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: docker/ui.Dockerfile
+    restart: unless-stopped
+    environment:
+      API_URL: http://api:8000
+      PUBLIC_API_URL: /api
+    depends_on:
+      - api
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    depends_on:
+      - api
+      - ui
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ------------------------------------------------------------ jobs
+  scheduler:                       # daily AMIS scrape -> processed data -> API picks it up
+    image: ${REGISTRY:-ghcr.io/anasnaveed69}/mandicast-pipeline:${IMAGE_TAG:-latest}
+    build: *pipeline-build
+    restart: unless-stopped
+    command: ["python", "-m", "mandicast.jobs", "schedule"]
+    environment: *pipeline-env
+    volumes:
+      - ./:/workspace
+    depends_on:
+      mlflow:
+        condition: service_healthy
+
+  pipeline:                        # one-off: docker compose --profile train run --rm pipeline
+    image: ${REGISTRY:-ghcr.io/anasnaveed69}/mandicast-pipeline:${IMAGE_TAG:-latest}
+    build: *pipeline-build
+    profiles: ["train"]
+    command: ["python", "-m", "mandicast.jobs", "retrain"]
+    environment: *pipeline-env
+    volumes:
+      - ./:/workspace
+    depends_on:
+      mlflow:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  mlflow-artifacts:
