@@ -1,0 +1,23 @@
+# keep the build context small: data, models and caches never go into images
+.git
+.github
+.dvc/cache
+.dvc/tmp
+.venv
+venv
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.ruff_cache
+data
+demo
+models
+reports
+mlruns
+mlartifacts
+mlflow.db
+docs
+tests
+deploy
+.env
+*.log
