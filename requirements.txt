@@ -1,5 +1,5 @@
-pandas>=2.2
-numpy>=1.26
+pandas>=2.2,<3
+numpy>=1.26,<3
 pyarrow>=15
 scikit-learn>=1.4
 xgboost>=2.0
@@ -16,3 +16,8 @@ hijridate>=2.5
 matplotlib>=3.8
 cloudpickle>=3.0
 pyyaml>=6.0
+# serving (phase 2)
+fastapi>=0.115
+uvicorn[standard]>=0.30
+prometheus-client>=0.20
+tzdata>=2024.1

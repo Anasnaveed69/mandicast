@@ -10,7 +10,7 @@ import mlflow
 import optuna
 
 from .backtest import load_data, mean_mase, run_backtest
-from .config import XGB_PARAMS_PATH, git_commit, load_params, setup_logging
+from .config import XGB_PARAMS_PATH, git_commit, load_params, setup_logging, tracking_uri
 from .evaluation import walk_forward_folds
 from .models.tabular import XGBoostModel
 
@@ -51,7 +51,7 @@ def main():
             mlflow.log_metric("inner_mase", score)
         return score
 
-    mlflow.set_tracking_uri(params["mlflow"]["tracking_uri"])
+    mlflow.set_tracking_uri(tracking_uri(params))
     mlflow.set_experiment(params["mlflow"]["tuning_experiment"])
     with mlflow.start_run(run_name="xgboost_optuna"):
         mlflow.set_tags({"git_commit": git_commit(), "model": "xgboost"})

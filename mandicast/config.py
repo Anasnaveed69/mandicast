@@ -1,5 +1,6 @@
 import hashlib
 import logging
+import os
 import subprocess
 from pathlib import Path
 
@@ -39,6 +40,12 @@ def file_md5(path, chunk=1 << 20):
     return h.hexdigest()
 
 
+def tracking_uri(params):
+    """MLflow tracking URI. MLFLOW_TRACKING_URI (set in the containers to the MLflow
+    server) wins over params.yaml, which keeps the local sqlite default."""
+    return os.environ.get("MLFLOW_TRACKING_URI") or params["mlflow"]["tracking_uri"]
+
+
 def git_commit():
     try:
         out = subprocess.run(
@@ -47,4 +54,5 @@ def git_commit():
         )
         return out.stdout.strip()
     except Exception:
-        return "unknown"
+        # the API image has no .git; the image build passes the commit in instead
+        return os.environ.get("GIT_COMMIT", "unknown")[:7]

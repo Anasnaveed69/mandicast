@@ -26,6 +26,7 @@ from .config import (
     git_commit,
     load_params,
     setup_logging,
+    tracking_uri,
 )
 from .models import build_model
 from .serving import MandiCastModel
@@ -59,7 +60,7 @@ def main():
         shutil.rmtree(OUT_DIR)
     OUT_DIR.mkdir(parents=True)
 
-    mlflow.set_tracking_uri(params["mlflow"]["tracking_uri"])
+    mlflow.set_tracking_uri(tracking_uri(params))
     mlflow.set_experiment(params["mlflow"]["registry_experiment"])
     client = MlflowClient()
 

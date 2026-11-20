@@ -13,7 +13,15 @@ import mlflow
 import pandas as pd
 
 from .backtest import load_data, run_backtest, summarise
-from .config import FEATURES_PATH, REPORTS_DIR, file_md5, git_commit, load_params, setup_logging
+from .config import (
+    FEATURES_PATH,
+    REPORTS_DIR,
+    file_md5,
+    git_commit,
+    load_params,
+    setup_logging,
+    tracking_uri,
+)
 from .evaluation import walk_forward_folds
 from .models import build_model, enabled_models
 
@@ -59,7 +67,7 @@ def main():
     log.info("%d folds, first cutoff %s, last origin %s", len(folds),
              folds[0].cutoff.date(), folds[-1].origins[-1].date())
 
-    mlflow.set_tracking_uri(params["mlflow"]["tracking_uri"])
+    mlflow.set_tracking_uri(tracking_uri(params))
     mlflow.set_experiment(params["mlflow"]["benchmark_experiment"])
 
     all_preds, all_times = [], []
