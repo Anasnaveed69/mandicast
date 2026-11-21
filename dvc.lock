@@ -33,19 +33,19 @@ stages:
     outs:
     - path: data/processed/prices.parquet
       hash: md5
-      md5: d480c9bb5a220ebc2965a6415cf21db6
-      size: 11761
+      md5: 3730a2595e18b4ebae9b2d88694b20fd
+      size: 11918
     - path: reports/data_quality.json
       hash: md5
-      md5: 6d7d387decc1f2d48380b91e80efaa40
-      size: 598
+      md5: 401d374fb2664d6c60e816271f7195e5
+      size: 568
   features:
     cmd: python -m mandicast.features
     deps:
     - path: data/processed/prices.parquet
       hash: md5
-      md5: d480c9bb5a220ebc2965a6415cf21db6
-      size: 11761
+      md5: 3730a2595e18b4ebae9b2d88694b20fd
+      size: 11918
     - path: mandicast/features.py
       hash: md5
       md5: 4173b9dabb4c0ceade4aff5d098b10dc
@@ -68,15 +68,15 @@ stages:
     outs:
     - path: data/processed/features.parquet
       hash: md5
-      md5: 96ac5462075d40080fdb5aec26d3cae5
-      size: 185398
+      md5: eb7b5b7cee59231106adf92ccad16713
+      size: 185879
   tune:
     cmd: python -m mandicast.tune
     deps:
     - path: data/processed/features.parquet
       hash: md5
-      md5: 96ac5462075d40080fdb5aec26d3cae5
-      size: 185398
+      md5: eb7b5b7cee59231106adf92ccad16713
+      size: 185879
     - path: mandicast/backtest.py
       hash: md5
       md5: d34cd601ff2a373007d113f5b33f2e4a
@@ -91,8 +91,8 @@ stages:
       size: 4129
     - path: mandicast/tune.py
       hash: md5
-      md5: b30b66cbb521c605f85f4657207e6be1
-      size: 3520
+      md5: 50e2a365434235d45bad52036b08d7f6
+      size: 3522
     params:
       params.yaml:
         backtest:
@@ -118,40 +118,40 @@ stages:
     outs:
     - path: models/xgb_params.json
       hash: md5
-      md5: 654d19dc32896f658baab33880563721
-      size: 229
+      md5: deac49615f0190b25cd6b9370d5cff70
+      size: 224
   benchmark:
     cmd: python -m mandicast.benchmark
     deps:
     - path: data/processed/features.parquet
       hash: md5
-      md5: 96ac5462075d40080fdb5aec26d3cae5
-      size: 185398
+      md5: eb7b5b7cee59231106adf92ccad16713
+      size: 185879
     - path: data/processed/prices.parquet
       hash: md5
-      md5: d480c9bb5a220ebc2965a6415cf21db6
-      size: 11761
+      md5: 3730a2595e18b4ebae9b2d88694b20fd
+      size: 11918
     - path: mandicast/backtest.py
       hash: md5
       md5: d34cd601ff2a373007d113f5b33f2e4a
       size: 2346
     - path: mandicast/benchmark.py
       hash: md5
-      md5: 40ccedd8df96af2074450579115c7039
-      size: 7036
+      md5: a657e404893691ee8f35bec63a8bbaa2
+      size: 7071
     - path: mandicast/evaluation.py
       hash: md5
       md5: a8a56c798f4a0564fd1f2d80161da5eb
       size: 3106
     - path: mandicast/models
       hash: md5
-      md5: 48be9a95bda67d911ba6782735685892.dir
-      size: 59447
-      nfiles: 16
+      md5: 26e1293ecdd637fd46cc2b24812cf770.dir
+      size: 16675
+      nfiles: 6
     - path: models/xgb_params.json
       hash: md5
-      md5: 654d19dc32896f658baab33880563721
-      size: 229
+      md5: deac49615f0190b25cd6b9370d5cff70
+      size: 224
     params:
       params.yaml:
         backtest:
@@ -204,35 +204,35 @@ stages:
     outs:
     - path: reports/benchmark.csv
       hash: md5
-      md5: 4b974294f582388bd44f0d3b63393a57
-      size: 2827
+      md5: 0f89513806848fcf9f143c65fe47571e
+      size: 2798
     - path: reports/benchmark_summary.json
       hash: md5
-      md5: a3bde070eaf93d892bbf8e90260e8e66
-      size: 586
+      md5: 43f4e9b7c86fecf9205f3e51dfcfdba8
+      size: 554
     - path: reports/predictions.parquet
       hash: md5
-      md5: 79e10e812deaf54240c535849911794a
-      size: 84559
+      md5: 1f1d9e017f2c525ecb0e033d8c9f4afd
+      size: 83560
   register:
     cmd: python -m mandicast.register
     deps:
     - path: data/processed/features.parquet
       hash: md5
-      md5: 96ac5462075d40080fdb5aec26d3cae5
-      size: 185398
+      md5: eb7b5b7cee59231106adf92ccad16713
+      size: 185879
     - path: mandicast/register.py
       hash: md5
-      md5: c4cc9740bdd81f2259ae90d3da6dfddd
-      size: 5430
+      md5: 77fd941dc6883bdeec4976d02d7f671c
+      size: 5436
     - path: mandicast/serving.py
       hash: md5
       md5: 16683ddfc65465497f1de82a1dedd22e
       size: 2369
     - path: reports/benchmark.csv
       hash: md5
-      md5: 4b974294f582388bd44f0d3b63393a57
-      size: 2827
+      md5: 0f89513806848fcf9f143c65fe47571e
+      size: 2798
     params:
       params.yaml:
         backtest.horizons:
@@ -258,10 +258,10 @@ stages:
     outs:
     - path: models/registry
       hash: md5
-      md5: f3f6e5d2b22dc962697d3e04a4784baf.dir
-      size: 2092
+      md5: 0904eb11666395c668d343af41a727a1.dir
+      size: 1966
       nfiles: 8
     - path: reports/registry.json
       hash: md5
-      md5: 41f54b4eed9f54b5c61269251da5ab15
-      size: 1260
+      md5: 84dee60845f30d20cd62b4bac19a1acd
+      size: 1205
