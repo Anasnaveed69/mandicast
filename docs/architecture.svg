@@ -1,0 +1,143 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1130" viewBox="0 0 1600 1130">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#333"/></marker>
+<style>text{font-family:Helvetica,Arial,sans-serif;fill:#1d1d1d}.t{font-size:15px;font-weight:700}.d{font-size:12.5px;fill:#333}.l{font-size:12px;fill:#444;font-style:italic}.h{font-size:24px;font-weight:700}.s{font-size:14px;fill:#555}.g{font-size:14px;font-weight:700;fill:#555}</style></defs>
+<rect width="1600" height="1130" fill="#ffffff"/>
+<text x="30" y="42" class="h">MandiCast: Phase 2 cloud architecture</text>
+<text x="30" y="66" class="s">Lahore mandi price forecasting: containers, data stores, APIs and CI/CD</text>
+<rect x="20" y="160" width="340" height="800" rx="14" fill="none" stroke="#7a4fc4" stroke-width="1.5" stroke-dasharray="8 5"/>
+<text x="36" y="184" class="g">GitHub (CI / CD / CT)</text>
+<rect x="400" y="160" width="880" height="800" rx="14" fill="#fbfcff" stroke="#3b63c4" stroke-width="2" stroke-dasharray="8 5"/>
+<text x="416" y="184" class="g">AWS EC2 · Ubuntu · docker compose (one bridge network)</text>
+<rect x="40" y="200" width="300" height="62" rx="10" fill="#f1e9fb" stroke="#7a4fc4" stroke-width="2"/>
+<text x="190.0" y="224" class="t" text-anchor="middle">GitHub repository</text>
+<text x="190.0" y="244" class="d" text-anchor="middle">code · dvc.yaml · params.yaml · dvc.lock</text>
+<rect x="40" y="300" width="300" height="140" rx="10" fill="#f1e9fb" stroke="#7a4fc4" stroke-width="2"/>
+<text x="190.0" y="324" class="t" text-anchor="middle">ci.yml  (push / pull request)</text>
+<text x="190.0" y="344" class="d" text-anchor="middle">ruff + pytest: pipeline, API, jobs</text>
+<text x="190.0" y="361" class="d" text-anchor="middle">build api · pipeline · ui · mlflow images</text>
+<text x="190.0" y="378" class="d" text-anchor="middle">demo bundle → docker compose up</text>
+<text x="190.0" y="395" class="d" text-anchor="middle">smoke test through nginx: /ready,</text>
+<text x="190.0" y="412" class="d" text-anchor="middle">/v1/forecast, /v1/predict, /metrics</text>
+<rect x="40" y="480" width="300" height="96" rx="10" fill="#f1e9fb" stroke="#7a4fc4" stroke-width="2"/>
+<text x="190.0" y="504" class="t" text-anchor="middle">cd.yml  (after ci passes on main)</text>
+<text x="190.0" y="524" class="d" text-anchor="middle">push images to GHCR (sha + latest)</text>
+<text x="190.0" y="541" class="d" text-anchor="middle">SSH → git reset → deploy.sh</text>
+<text x="190.0" y="558" class="d" text-anchor="middle">→ compose pull + up → health check</text>
+<rect x="40" y="616" width="300" height="80" rx="10" fill="#f1e9fb" stroke="#7a4fc4" stroke-width="2"/>
+<text x="190.0" y="640" class="t" text-anchor="middle">GitHub Container Registry</text>
+<text x="190.0" y="660" class="d" text-anchor="middle">mandicast-api · -pipeline</text>
+<text x="190.0" y="677" class="d" text-anchor="middle">mandicast-ui · -mlflow</text>
+<rect x="40" y="850" width="300" height="90" rx="10" fill="#f1e9fb" stroke="#7a4fc4" stroke-width="2"/>
+<text x="190.0" y="874" class="t" text-anchor="middle">retrain.yml  (Sun 20:00 PKT / manual)</text>
+<text x="190.0" y="894" class="d" text-anchor="middle">SSH → compose run pipeline</text>
+<text x="190.0" y="911" class="d" text-anchor="middle">champion moves only if MASE ≤ old</text>
+<polyline points="190,262 190,298" fill="none" stroke="#333" stroke-width="1.8" marker-end="url(#ah)"/>
+<polyline points="190,440 190,478" fill="none" stroke="#333" stroke-width="1.8" marker-end="url(#ah)"/>
+<text x="200" y="463" class="l" text-anchor="start">on success</text>
+<polyline points="190,576 190,614" fill="none" stroke="#333" stroke-width="1.8" marker-end="url(#ah)"/>
+<text x="200" y="600" class="l" text-anchor="start">push</text>
+<polyline points="340,528 398,528" fill="none" stroke="#333" stroke-width="1.8" marker-end="url(#ah)"/>
+<text x="369" y="520" class="l" text-anchor="middle">SSH</text>
+<polyline points="340,656 398,656" fill="none" stroke="#333" stroke-width="1.8" marker-end="url(#ah)"/>
+<text x="369" y="648" class="l" text-anchor="middle">pull</text>
+<rect x="690" y="82" width="260" height="58" rx="10" fill="#f3f3f3" stroke="#6b6b6b" stroke-width="2"/>
+<text x="820.0" y="106" class="t" text-anchor="middle">Users</text>
+<text x="820.0" y="126" class="d" text-anchor="middle">browser · curl · Swagger UI</text>
+<polyline points="820,140 820,208" fill="none" stroke="#333" stroke-width="1.8" marker-end="url(#ah)"/>
+<text x="830" y="180" class="l" text-anchor="start">HTTP :80</text>
+<rect x="700" y="210" width="240" height="72" rx="10" fill="#e8f0fe" stroke="#3b63c4" stroke-width="2"/>
+<text x="820.0" y="234" class="t" text-anchor="middle">nginx  :80</text>
+<text x="820.0" y="254" class="d" text-anchor="middle">/ → ui    /api/ → api</text>
+<text x="820.0" y="271" class="d" text-anchor="middle">rate limit on /api</text>
+<rect x="430" y="330" width="230" height="92" rx="10" fill="#e8f0fe" stroke="#3b63c4" stroke-width="2"/>
+<text x="545.0" y="354" class="t" text-anchor="middle">ui  (Streamlit :8501)</text>
+<text x="545.0" y="374" class="d" text-anchor="middle">forecast cards + chart</text>
+<text x="545.0" y="391" class="d" text-anchor="middle">model table · CSV upload</text>
+<text x="545.0" y="408" class="d" text-anchor="middle">calls the API only</text>
+<rect x="730" y="322" width="270" height="140" rx="10" fill="#e8f0fe" stroke="#3b63c4" stroke-width="2"/>
+<text x="865.0" y="346" class="t" text-anchor="middle">api  (FastAPI :8000)</text>
+<text x="865.0" y="366" class="d" text-anchor="middle">GET /v1/forecast/{commodity}</text>
+<text x="865.0" y="383" class="d" text-anchor="middle">POST /v1/predict · GET /v1/models</text>
+<text x="865.0" y="400" class="d" text-anchor="middle">/health · /ready · /metrics (Prometheus)</text>
+<text x="865.0" y="417" class="d" text-anchor="middle">POST /admin/reload (token)</text>
+<text x="865.0" y="434" class="d" text-anchor="middle">Chronos weights baked into image</text>
+<rect x="1060" y="322" width="200" height="120" rx="10" fill="#e8f0fe" stroke="#3b63c4" stroke-width="2"/>
+<text x="1160.0" y="346" class="t" text-anchor="middle">mlflow  :5000</text>
+<text x="1160.0" y="366" class="d" text-anchor="middle">tracking server</text>
+<text x="1160.0" y="383" class="d" text-anchor="middle">+ model registry</text>
+<text x="1160.0" y="400" class="d" text-anchor="middle">@champion / @challenger</text>
+<text x="1160.0" y="417" class="d" text-anchor="middle">(localhost only)</text>
+<polyline points="780,282 600,328" fill="none" stroke="#333" stroke-width="1.8" marker-end="url(#ah)"/>
+<polyline points="820,282 820,320" fill="none" stroke="#333" stroke-width="1.8" marker-end="url(#ah)"/>
+<polyline points="660,376 728,376" fill="none" stroke="#333" stroke-width="1.8" marker-end="url(#ah)"/>
+<text x="694" y="368" class="l" text-anchor="middle">REST</text>
+<polyline points="1000,370 1058,370" fill="none" stroke="#333" stroke-width="1.8" marker-end="url(#ah)"/>
+<text x="1029" y="356" class="l" text-anchor="middle">load</text>
+<text x="1029" y="390" class="l" text-anchor="middle">models:/</text>
+<rect x="1060" y="520" width="200" height="72" rx="10" fill="#fff4e0" stroke="#c47f00" stroke-width="2"/>
+<text x="1160.0" y="544" class="t" text-anchor="middle">postgres</text>
+<text x="1160.0" y="564" class="d" text-anchor="middle">MLflow backend store</text>
+<text x="1160.0" y="581" class="d" text-anchor="middle">volume: pgdata</text>
+<rect x="1060" y="622" width="200" height="62" rx="10" fill="#fff4e0" stroke="#c47f00" stroke-width="2"/>
+<text x="1160.0" y="646" class="t" text-anchor="middle">mlflow-artifacts</text>
+<text x="1160.0" y="666" class="d" text-anchor="middle">volume (or S3)</text>
+<polyline points="1160,442 1160,518" fill="none" stroke="#333" stroke-width="1.8" marker-end="url(#ah)"/>
+<text x="1168" y="486" class="l" text-anchor="start">runs, versions</text>
+<polyline points="1262,400 1272,400 1272,653 1262,653" fill="none" stroke="#333" stroke-width="1.8" marker-end="url(#ah)"/>
+<rect x="730" y="520" width="270" height="96" rx="10" fill="#fff4e0" stroke="#c47f00" stroke-width="2"/>
+<text x="865.0" y="544" class="t" text-anchor="middle">./data  (bind mount, DVC-tracked)</text>
+<text x="865.0" y="564" class="d" text-anchor="middle">raw/amis_lahore.csv</text>
+<text x="865.0" y="581" class="d" text-anchor="middle">processed/prices.parquet</text>
+<text x="865.0" y="598" class="d" text-anchor="middle">processed/features.parquet</text>
+<polyline points="865,518 865,464" fill="none" stroke="#333" stroke-width="1.8" marker-end="url(#ah)"/>
+<text x="875" y="500" class="l" text-anchor="start">reads prices (auto-reload)</text>
+<rect x="430" y="700" width="250" height="130" rx="10" fill="#e7f6ec" stroke="#2e8b57" stroke-width="2"/>
+<text x="555.0" y="724" class="t" text-anchor="middle">scheduler  (always on)</text>
+<text x="555.0" y="744" class="d" text-anchor="middle">daily 18:30 PKT:</text>
+<text x="555.0" y="761" class="d" text-anchor="middle">scrape AMIS → prepare → features</text>
+<text x="555.0" y="778" class="d" text-anchor="middle">atomic parquet writes</text>
+<text x="555.0" y="795" class="d" text-anchor="middle">→ POST /admin/reload</text>
+<rect x="730" y="700" width="270" height="150" rx="10" fill="#e7f6ec" stroke="#2e8b57" stroke-width="2"/>
+<text x="865.0" y="724" class="t" text-anchor="middle">pipeline  (profile: train)</text>
+<text x="865.0" y="744" class="d" text-anchor="middle">dvc pull → dvc repro:</text>
+<text x="865.0" y="761" class="d" text-anchor="middle">prepare → features → tune</text>
+<text x="865.0" y="778" class="d" text-anchor="middle">→ benchmark → register</text>
+<text x="865.0" y="795" class="d" text-anchor="middle">dvc push → POST /admin/reload</text>
+<text x="865.0" y="812" class="d" text-anchor="middle">(same image layers as api)</text>
+<polyline points="680,730 712,730 712,580 728,580" fill="none" stroke="#333" stroke-width="1.8" marker-end="url(#ah)"/>
+<text x="690" y="656" class="l" text-anchor="end">writes</text>
+<polyline points="865,698 865,618" fill="none" stroke="#333" stroke-width="1.8" marker-end="url(#ah)"/>
+<text x="875" y="662" class="l" text-anchor="start">outputs</text>
+<polyline points="1000,760 1030,760 1030,420 1058,420" fill="none" stroke="#333" stroke-width="1.8" marker-end="url(#ah)"/>
+<text x="1036" y="730" class="l" text-anchor="start">log runs, register</text>
+<polyline points="340,895 840,895 840,852" fill="none" stroke="#333" stroke-width="1.8" marker-end="url(#ah)"/>
+<text x="590" y="887" class="l" text-anchor="middle">docker compose run</text>
+<rect x="430" y="995" width="250" height="80" rx="10" fill="#f3f3f3" stroke="#6b6b6b" stroke-width="2"/>
+<text x="555.0" y="1019" class="t" text-anchor="middle">AMIS.pk</text>
+<text x="555.0" y="1039" class="d" text-anchor="middle">daily Lahore wholesale prices</text>
+<text x="555.0" y="1056" class="d" text-anchor="middle">(Rs / 100 kg)</text>
+<rect x="730" y="995" width="270" height="80" rx="10" fill="#f3f3f3" stroke="#6b6b6b" stroke-width="2"/>
+<text x="865.0" y="1019" class="t" text-anchor="middle">AWS S3</text>
+<text x="865.0" y="1039" class="d" text-anchor="middle">DVC remote: data, models</text>
+<text x="865.0" y="1056" class="d" text-anchor="middle">MLflow artifacts (optional)</text>
+<rect x="1060" y="995" width="200" height="80" rx="10" fill="#f3f3f3" stroke="#6b6b6b" stroke-width="2"/>
+<text x="1160.0" y="1019" class="t" text-anchor="middle">Hugging Face hub</text>
+<text x="1160.0" y="1039" class="d" text-anchor="middle">Chronos-Bolt tiny weights</text>
+<text x="1160.0" y="1056" class="d" text-anchor="middle">(fetched at image build)</text>
+<polyline points="555,993 555,832" fill="none" stroke="#333" stroke-width="1.8" marker-end="url(#ah)"/>
+<text x="565" y="984" class="l" text-anchor="start">HTTPS scrape</text>
+<polyline points="930,852 930,993" fill="none" stroke="#333" stroke-width="1.8" marker-end="url(#ah)"/>
+<text x="940" y="984" class="l" text-anchor="start">dvc pull / push</text>
+<polyline points="1160,686 1160,978 1010,978 1010,993" fill="none" stroke="#333" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#ah)"/>
+<text x="1168" y="940" class="l">optional S3 artifacts</text>
+<rect x="40" y="990" width="22" height="16" rx="4" fill="#f1e9fb" stroke="#7a4fc4" stroke-width="2"/>
+<text x="72" y="1003" class="d">CI/CD (GitHub Actions)</text>
+<rect x="40" y="1014" width="22" height="16" rx="4" fill="#e8f0fe" stroke="#3b63c4" stroke-width="2"/>
+<text x="72" y="1027" class="d">container (service)</text>
+<rect x="40" y="1038" width="22" height="16" rx="4" fill="#e7f6ec" stroke="#2e8b57" stroke-width="2"/>
+<text x="72" y="1051" class="d">container (job)</text>
+<rect x="40" y="1062" width="22" height="16" rx="4" fill="#fff4e0" stroke="#c47f00" stroke-width="2"/>
+<text x="72" y="1075" class="d">data store</text>
+<rect x="40" y="1086" width="22" height="16" rx="4" fill="#f3f3f3" stroke="#6b6b6b" stroke-width="2"/>
+<text x="72" y="1099" class="d">external</text>
+</svg>
