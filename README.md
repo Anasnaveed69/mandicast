@@ -4,7 +4,87 @@ Daily wholesale price forecasting for tomato, onion and potato in the Lahore man
 
 Team: Anas Naveed Butt (23L-0764), Muhammad Ali Hadi (23L-0940), Abdul Hadi (23L-0923), Mohib Ali Khattak (23L-0763)
 
-This README covers **Phase 1 (ML pipeline)**: data versioning, the training/evaluation pipeline, experiment tracking and the model registry. Serving (FastAPI/Streamlit), Docker, CI/CD to AWS and drift monitoring come in the next phases.
+[![ci](https://github.com/Anasnaveed69/mandicast/actions/workflows/ci.yml/badge.svg)](https://github.com/Anasnaveed69/mandicast/actions/workflows/ci.yml)
+[![cd](https://github.com/Anasnaveed69/mandicast/actions/workflows/cd.yml/badge.svg)](https://github.com/Anasnaveed69/mandicast/actions/workflows/cd.yml)
+
+- **Phase 1 (ML pipeline)**: data versioning, training/evaluation pipeline, experiment tracking, model registry ([below](#what-phase-1-does)).
+- **Phase 2 (cloud deployment)**: FastAPI inference server, Streamlit UI, Docker Compose stack, CI/CD with GitHub Actions to AWS EC2 ([next section](#phase-2-productionizing-and-deployment)).
+
+Drift monitoring comes in the next phase.
+
+## Phase 2: productionizing and deployment
+
+![architecture](docs/architecture.png)
+
+### Services (`docker-compose.yml`)
+
+| Service | Image | What it does |
+|---|---|---|
+| `nginx` | nginx:1.27-alpine | the only public port (80): `/` goes to the UI, `/api/` to the API |
+| `api` | `mandicast-api` (docker/app.Dockerfile, target `api`) | FastAPI. Loads `models:/mandicast-<commodity>-h<h>@champion` from the MLflow registry and serves forecasts from the latest prices |
+| `ui` | `mandicast-ui` | Streamlit dashboard: today's price, 1 and 7 day forecasts, history chart, models in production, forecast from an uploaded CSV |
+| `mlflow` | `mandicast-mlflow` | tracking server and model registry (Postgres backend, artifacts on a volume or S3), localhost only |
+| `postgres` | postgres:16-alpine | MLflow backend store |
+| `scheduler` | `mandicast-pipeline` (target `pipeline`) | every day at 18:30 PKT: scrape AMIS, rebuild `prices.parquet` / `features.parquet` (atomic writes), tell the API to reload |
+| `pipeline` | `mandicast-pipeline` | one-off job (profile `train`): `dvc pull`, `dvc repro` against the MLflow server, `dvc push`, API reload |
+
+`api` and `pipeline` are two targets of one Dockerfile, so the models are trained and served with the same library versions. Torch is the CPU build, the Chronos-Bolt weights are baked into the API image at build time, and every container runs as a non-root user with a health check.
+
+### Inference API
+
+Interactive docs: `http://<host>/api/docs`.
+
+| Method | Path | |
+|---|---|---|
+| GET | `/v1/forecast` | latest forecast for every commodity and horizon |
+| GET | `/v1/forecast/{commodity}?horizon=7` | one commodity (`tomato`, `onion`, `potato`; horizon 1 or 7) |
+| POST | `/v1/predict` | forecast from a price history you send |
+| GET | `/v1/prices/{commodity}?days=90` | cleaned prices the forecasts are based on |
+| GET | `/v1/models` | which registry version / model family is serving each forecast |
+| GET | `/health`, `/ready` | liveness; readiness (503 until models and data are loaded) |
+| GET | `/metrics` | Prometheus metrics (requests, latency, forecasts served, data age) |
+| POST | `/admin/reload` | reload models from the registry (header `X-Admin-Token`) |
+
+```bash
+curl http://<host>/api/v1/forecast/tomato?horizon=7
+# {"data_last_date": "2026-11-13", "forecasts": [{"commodity": "tomato", "horizon": 7,
+#   "origin_date": "2026-11-13", "target_date": "2026-11-20", "yhat": 7200.0, "q10": null, "q90": null,
+#   "unit": "Rs/100kg", "model": {"name": "mandicast-tomato-h7", "version": "1", "model": "naive", ...}}]}
+
+curl -X POST http://<host>/api/v1/predict -H 'Content-Type: application/json' \
+  -d '{"commodity": "onion", "horizon": 7, "history": [{"date": "2026-10-01", "price": 6100}, ...]}'
+```
+
+Forecasts from the stored data are cached per model version and data date. The price file is reloaded when it changes, and `/admin/reload` swaps models without a restart. If the registry can't be reached at start-up, the API keeps retrying in the background and reports why in `/ready`.
+
+### Run it locally
+
+```bash
+cp .env.example .env
+docker compose up -d --build                         # http://localhost  (UI)  ·  http://localhost/api/docs
+docker compose --profile train run --rm pipeline     # train + register into the MLflow server
+# MLflow UI: http://localhost:5000
+```
+
+Without the real data, or before anything is registered, the stack can run on a synthetic demo bundle (this is also what CI uses):
+
+```bash
+docker compose build api
+docker run --rm -v "$PWD/demo:/out" ghcr.io/anasnaveed69/mandicast-api:latest python -m mandicast.demo --out /out
+MODEL_SOURCE=local DATA_DIR=./demo/data SERVING_DIR=./demo/models/serving docker compose up -d nginx
+```
+
+`python -m mandicast.export` copies the current champions from the registry into `models/serving/`, so the API can also run with `MODEL_SOURCE=local` and no MLflow server.
+
+### CI/CD
+
+| Workflow | Trigger | Steps |
+|---|---|---|
+| `ci.yml` | push to main, pull request | ruff, pytest (pipeline, API and job tests); build all four images; start api + ui + nginx on a demo bundle and smoke-test through nginx (`/ready`, `/v1/forecast`, `/v1/predict`, `/metrics`, UI health) |
+| `cd.yml` | `ci` passed on main, or manual | push images to GHCR tagged with the commit SHA and `latest`; SSH to EC2, check out the same commit, `deploy/deploy.sh` (pull, `up -d`, wait for health); public smoke test |
+| `retrain.yml` | Sundays 20:00 PKT, or manual | SSH to EC2 and run the `pipeline` job; `register` moves `@champion` only if the new model's MASE is at least as good |
+
+Deployment steps (EC2 setup, secrets, data bootstrap) are in [docs/deployment.md](docs/deployment.md).
 
 ## What Phase 1 does
 
@@ -69,6 +149,15 @@ mandicast/
   register.py      winners -> MLflow registry (champion/challenger aliases)
   serving.py       MLflow pyfunc wrapper, same interface for every model family
   models/          baselines, tabular (linear, xgboost), patchtst, chronos
+  api/             FastAPI inference server (settings, model/price stores, routes)
+  jobs.py          scheduled refresh / retrain jobs for the containers
+  export.py        registry champions -> self-contained serving bundle
+  demo.py          synthetic data + model bundle for CI and first runs
+ui/                Streamlit dashboard
+docker/            Dockerfiles (app: api + pipeline targets, ui, mlflow) and nginx config
+deploy/            EC2 setup and deploy scripts used by the CD workflow
+docs/              architecture diagram, deployment guide
+docker-compose.yml the production stack
 tests/             unit tests (no real data needed, includes look-ahead leakage tests)
 params.yaml        every setting used by the pipeline
 dvc.yaml           pipeline definition
