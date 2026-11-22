@@ -1,0 +1,37 @@
+name: retrain
+
+# Continuous training: every Sunday (20:00 PKT) or by hand, run the DVC pipeline on
+# the server against the MLflow server. `register` only moves @champion when the new
+# model is at least as good, then the API reloads its models.
+on:
+  schedule:
+    - cron: "0 15 * * 0"
+  workflow_dispatch:
+
+concurrency:
+  group: cd-production
+  cancel-in-progress: false
+
+jobs:
+  retrain:
+    runs-on: ubuntu-latest
+    env:
+      EC2_HOST: ${{ secrets.EC2_HOST }}
+    steps:
+      - name: Server configured?
+        if: env.EC2_HOST == ''
+        run: echo "::notice::EC2_HOST secret is not set; nothing to retrain."
+      - name: dvc repro on the server
+        if: env.EC2_HOST != ''
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          command_timeout: 90m
+          script: |
+            set -e
+            cd ~/mandicast
+            docker compose --profile train run --rm pipeline
+            curl -fsS http://localhost/api/ready
+            cat reports/registry.json
