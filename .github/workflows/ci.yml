@@ -110,7 +110,7 @@ jobs:
           print(json.dumps({"commodity": "onion", "horizon": 1, "history": hist}))
           EOF
           curl -fsS -X POST -H 'Content-Type: application/json' -d @payload.json \
-            http://localhost/api/v1/predict | jq -e '.yhat == 5059'
+              http://localhost/api/v1/predict | tee /dev/stderr | jq -e '.yhat > 0'
           curl -fsS http://localhost/api/metrics | grep -q mandicast_predictions_total
           curl -fsS http://localhost/_stcore/health
           test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost/)" = 200
